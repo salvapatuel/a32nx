@@ -182,8 +182,9 @@ class FMCMainDisplay extends BaseAirliners {
     Init() {
         super.Init();
         this.initVariables();
+        this.flightPhaseManager = new A32NX_FlightPhaseManager(this);
 
-        this.A32NXCore = new A32NX_Core();
+        this.A32NXCore = new A32NX_Core(this.flightPhaseManager);
         this.A32NXCore.init(this._lastTime);
 
         this.dataManager = new FMCDataManager(this);
