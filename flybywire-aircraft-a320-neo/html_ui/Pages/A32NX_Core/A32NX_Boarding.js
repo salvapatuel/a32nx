@@ -19,8 +19,6 @@ class A32NX_Boarding {
     }
 
     async init() {
-        // Set default pax (0)
-        console.log("INITIALIZING A32NX_Boarding.js!");
         const pax = SimVar.GetSimVarValue("L:A32NX_INITIAL_PAX", "number");
         const cargo = SimVar.GetSimVarValue("L:A32NX_INITIAL_CARGO", "number");
         await this.setPax(pax);
