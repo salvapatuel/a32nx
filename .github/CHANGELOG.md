@@ -184,6 +184,7 @@
 1. [HYD] Smoothed nose wheel steering when pushing back - @Crocket63
 1. [EFB] Add first officer flypad - @tracernz (Mike)
 1. [CLK] Added simvars for Clock CHR and ET - @ssewell (Shane Sewell)
+1. [FMGC] Workaround for Navigraph 2202 rev2/SU8 missed approach legs - @tracernz (Mike)
 
 ## 0.7.0
 
