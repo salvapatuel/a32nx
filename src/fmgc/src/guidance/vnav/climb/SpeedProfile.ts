@@ -83,7 +83,7 @@ export class McduSpeedProfile implements SpeedProfile {
         const { fcuSpeed, flightPhase, preselectedClbSpeed } = this.parameters;
 
         const hasPreselectedSpeed = flightPhase < FlightPhase.FLIGHT_PHASE_CLIMB && preselectedClbSpeed > 1;
-        const hasSelectedSpeed = fcuSpeed > 1;
+        const hasSelectedSpeed = fcuSpeed > 100 && flightPhase > FlightPhase.FLIGHT_PHASE_TAKEOFF;
 
         if (!hasPreselectedSpeed && !hasSelectedSpeed) {
             return this.getManagedTarget(distanceFromStart, altitude, managedSpeedType);
@@ -261,7 +261,7 @@ export class NdSpeedProfile implements SpeedProfile {
         const { fcuSpeed, flightPhase, preselectedClbSpeed } = this.parameters;
 
         const hasPreselectedSpeed = flightPhase < FlightPhase.FLIGHT_PHASE_CLIMB && preselectedClbSpeed > 1;
-        const hasSelectedSpeed = fcuSpeed > 1;
+        const hasSelectedSpeed = fcuSpeed > 100 && flightPhase > FlightPhase.FLIGHT_PHASE_TAKEOFF;
 
         if (hasPreselectedSpeed) {
             return preselectedClbSpeed;
@@ -293,7 +293,7 @@ export class NdSpeedProfile implements SpeedProfile {
         const { fcuSpeed, flightPhase, preselectedClbSpeed } = this.parameters;
 
         const hasPreselectedSpeed = flightPhase < FlightPhase.FLIGHT_PHASE_CLIMB && preselectedClbSpeed > 1;
-        const hasSelectedSpeed = fcuSpeed > 1;
+        const hasSelectedSpeed = fcuSpeed > 100 && flightPhase > FlightPhase.FLIGHT_PHASE_TAKEOFF;
 
         return hasSelectedSpeed || hasPreselectedSpeed;
     }
