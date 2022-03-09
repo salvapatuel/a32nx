@@ -115,9 +115,18 @@ export abstract class BaseGeometryProfile {
     }
 
     /**
-     * Find the altitude at which the profile predicts us to be at a distance along the flightplan.
+     * Find the speed at which the profile predicts us to be at a distance along the flightplan.
      * @param distanceFromStart Distance along that path
-     * @returns Predicted altitude
+     * @returns Predicted speed
+     */
+    interpolateSpeedAtDistance(distanceFromStart: NauticalMiles): Feet {
+        return this.interpolateFromCheckpoints(distanceFromStart, (checkpoint) => checkpoint.distanceFromStart, (checkpoint) => checkpoint.speed);
+    }
+
+    /**
+     * Find the distanceFromStart at which the profile predicts us to be at a time since departure
+     * @param secondsFromPresent Time since departure
+     * @returns Predicted distance
      */
     interpolateDistanceAtTime(secondsFromPresent: Seconds): NauticalMiles {
         return this.interpolateFromCheckpoints(secondsFromPresent, (checkpoint) => checkpoint.secondsFromPresent, (checkpoint) => checkpoint.distanceFromStart);

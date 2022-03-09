@@ -110,7 +110,7 @@ export class VnavDriver implements GuidanceComponent {
         this.constraintReader = new ConstraintReader(this.flightPlanManager);
 
         this.aircraftToDescentProfileRelation = new AircraftToDescentProfileRelation(this.computationParametersObserver);
-        this.descentGuidance = new DescentGuidance(this.aircraftToDescentProfileRelation, computationParametersObserver);
+        this.descentGuidance = new DescentGuidance(this.aircraftToDescentProfileRelation, computationParametersObserver, this.atmosphericConditions);
     }
 
     init(): void {

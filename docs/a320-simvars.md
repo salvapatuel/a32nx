@@ -1230,9 +1230,10 @@
     - Bool
     - Indicates if the linear deviation is shown on the PFD
 
-- A32NX_PFD_LINEAR_DEVIATION
+- A32NX_PFD_TARGET_ALTITUDE
     - Feet
-    - Indicates the current linear deviation shown on the PFD
+    - Indicates the current target altitude in the DES mode. This is an indicated altitude and not a pressure altitude
+    - This is used to compute a linear deviation
 
 - A32NX_PFD_VERTICAL_PROFILE_LATCHED
     - Boolean

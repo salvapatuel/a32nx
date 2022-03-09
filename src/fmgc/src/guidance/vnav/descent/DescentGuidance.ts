@@ -1,4 +1,5 @@
 import { RequestedVerticalMode, TargetAltitude, TargetVerticalSpeed } from '@fmgc/guidance/ControlLaws';
+import { AtmosphericConditions } from '@fmgc/guidance/vnav/AtmosphericConditions';
 import { AircraftToDescentProfileRelation } from '@fmgc/guidance/vnav/descent/AircraftToProfileRelation';
 import { NavGeometryProfile } from '@fmgc/guidance/vnav/profile/NavGeometryProfile';
 import { VerticalProfileComputationParametersObserver } from '@fmgc/guidance/vnav/VerticalProfileComputationParameters';
@@ -19,19 +20,25 @@ export class DescentGuidance {
 
     private targetAltitude: TargetAltitude = 0;
 
+    private targetAltitudeGuidance: TargetAltitude = 0;
+
     private targetVerticalSpeed: TargetVerticalSpeed = 0;
 
     private showLinearDeviationOnPfd: boolean = false;
-
-    private linearDeviation: Feet = 0;
 
     private showDescentLatchOnPfd: boolean = false;
 
     private speedMargin: SpeedMargin;
 
-    constructor(private aircraftToDescentProfileRelation: AircraftToDescentProfileRelation, private observer: VerticalProfileComputationParametersObserver) {
-        const { managedDescentSpeed, descentSpeedLimit } = this.observer.get();
-        this.speedMargin = new SpeedMargin(managedDescentSpeed, descentSpeedLimit);
+    private speedTarget: Knots | Mach;
+
+    constructor(
+        private aircraftToDescentProfileRelation: AircraftToDescentProfileRelation,
+        private observer: VerticalProfileComputationParametersObserver,
+        private atmosphericConditions: AtmosphericConditions,
+    ) {
+        const { managedDescentSpeed } = this.observer.get();
+        this.speedMargin = new SpeedMargin(managedDescentSpeed);
 
         this.writeToSimVars();
     }
@@ -65,7 +72,6 @@ export class DescentGuidance {
         this.targetAltitude = 0;
         this.targetVerticalSpeed = 0;
         this.showLinearDeviationOnPfd = false;
-        this.linearDeviation = 0;
         this.showDescentLatchOnPfd = false;
     }
 
@@ -80,17 +86,18 @@ export class DescentGuidance {
             this.changeState(DescentGuidanceState.ProvidingGuidance);
         }
 
+        this.updateSpeedTarget();
+        this.updateLinearDeviation();
+
         if (this.state === DescentGuidanceState.ProvidingGuidance) {
             this.updateDesModeGuidance();
         }
 
-        this.updateLinearDeviation();
         this.writeToSimVars();
     }
 
     private updateLinearDeviation() {
         this.targetAltitude = this.aircraftToDescentProfileRelation.currentTargetAltitude();
-        this.linearDeviation = this.aircraftToDescentProfileRelation.computeLinearDeviation();
 
         this.showLinearDeviationOnPfd = this.observer.get().flightPhase >= FmgcFlightPhase.Descent || this.aircraftToDescentProfileRelation.isPastTopOfDescent();
     }
@@ -99,13 +106,16 @@ export class DescentGuidance {
         const isOnGeometricPath = this.aircraftToDescentProfileRelation.isOnGeometricPath();
         const isAboveSpeedLimitAltitude = this.aircraftToDescentProfileRelation.isAboveSpeedLimitAltitude();
         const isBeforeTopOfDescent = !this.aircraftToDescentProfileRelation.isPastTopOfDescent();
+        const linearDeviation = this.aircraftToDescentProfileRelation.computeLinearDeviation();
 
         // const airspeed = SimVar.GetSimVarValue('AIRSPEED INDICATED', 'Knots');
         // SimVar.SetSimVarValue('L:A32NX_SPEEDS_MANAGED_ATHR', 'knots', this.speedMargin.getTarget(airspeed));
 
-        this.targetAltitude = this.aircraftToDescentProfileRelation.currentTargetAltitude();
+        this.targetAltitudeGuidance = this.atmosphericConditions.estimatePressureAltitudeInMsfs(
+            this.aircraftToDescentProfileRelation.currentTargetAltitude(),
+        );
 
-        if (isBeforeTopOfDescent || this.linearDeviation < -100) {
+        if (isBeforeTopOfDescent || linearDeviation < -200) {
             // below path
             if (isOnGeometricPath) {
                 this.requestedVerticalMode = RequestedVerticalMode.FpaSpeed;
@@ -114,7 +124,7 @@ export class DescentGuidance {
                 this.requestedVerticalMode = RequestedVerticalMode.VsSpeed;
                 this.targetVerticalSpeed = (isAboveSpeedLimitAltitude ? -1000 : -500);
             }
-        } else if (this.linearDeviation > 100) {
+        } else if (linearDeviation > 200) {
             // above path
             this.requestedVerticalMode = RequestedVerticalMode.SpeedThrust;
         } else if (isOnGeometricPath) {
@@ -130,18 +140,26 @@ export class DescentGuidance {
         }
     }
 
+    private updateSpeedTarget() {
+        const { fcuSpeed } = this.observer.get();
+
+        this.speedTarget = fcuSpeed > 0
+            ? fcuSpeed
+            : Math.round(this.aircraftToDescentProfileRelation.currentTargetSpeed());
+    }
+
     private writeToSimVars() {
         SimVar.SetSimVarValue('L:A32NX_FG_REQUESTED_VERTICAL_MODE', 'Enum', this.requestedVerticalMode);
-        SimVar.SetSimVarValue('L:A32NX_FG_TARGET_ALTITUDE', 'Feet', this.targetAltitude);
+        SimVar.SetSimVarValue('L:A32NX_FG_TARGET_ALTITUDE', 'Feet', this.targetAltitudeGuidance);
         SimVar.SetSimVarValue('L:A32NX_FG_TARGET_VERTICAL_SPEED', 'number', this.targetVerticalSpeed);
 
+        SimVar.SetSimVarValue('L:A32NX_PFD_TARGET_ALTITUDE', 'Feet', this.targetAltitude);
         SimVar.SetSimVarValue('L:A32NX_PFD_LINEAR_DEVIATION_ACTIVE', 'Bool', this.showLinearDeviationOnPfd);
-        SimVar.SetSimVarValue('L:A32NX_PFD_LINEAR_DEVIATION', 'Feet', this.linearDeviation);
         SimVar.SetSimVarValue('L:A32NX_PFD_VERTICAL_PROFILE_LATCHED', 'Bool', this.showDescentLatchOnPfd);
 
-        const [lower, upper] = this.speedMargin.getMargins();
+        const [lower, upper] = this.speedMargin.getMargins(this.speedTarget);
 
-        SimVar.SetSimVarValue('L:A32NX_PFD_LOWER_SPEED_MARGIN', 'Bool', lower);
-        SimVar.SetSimVarValue('L:A32NX_PFD_UPPER_SPEED_MARGIN', 'Bool', upper);
+        SimVar.SetSimVarValue('L:A32NX_PFD_LOWER_SPEED_MARGIN', 'Knots', lower);
+        SimVar.SetSimVarValue('L:A32NX_PFD_UPPER_SPEED_MARGIN', 'Knots', upper);
     }
 }

@@ -212,7 +212,7 @@ export enum PFDVars {
     latAcc = 'ACCELERATION BODY X',
 
     linearDeviationActive = 'L:A32NX_PFD_LINEAR_DEVIATION_ACTIVE',
-    targetAltitude = 'L:A32NX_FG_TARGET_ALTITUDE',
+    targetAltitude = 'L:A32NX_PFD_TARGET_ALTITUDE',
     verticalProfileLatched = 'L:A32NX_PFD_VERTICAL_PROFILE_LATCHED',
     showSpeedMargins = 'L:A32NX_PFD_SHOW_SPEED_MARGINS',
     upperSpeedMargin = 'L:A32NX_PFD_UPPER_SPEED_MARGIN',
@@ -340,7 +340,7 @@ export class PFDSimvarPublisher extends SimVarPublisher<PFDSimvars> {
 
         ['betaTarget', { name: PFDVars.betaTarget, type: SimVarValueType.Number }],
 
-        ['latAcc', { name: PFDVars.latAcc, type: SimVarValueType.GForce }],
+        ['latAcc', { name: PFDVars.latAcc, type: SimVarValueType.Number }],
 
         ['linearDeviationActive', { name: PFDVars.linearDeviationActive, type: SimVarValueType.Bool }],
         ['targetAltitude', { name: PFDVars.targetAltitude, type: SimVarValueType.Feet }],

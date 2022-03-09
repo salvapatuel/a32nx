@@ -15,6 +15,7 @@ export interface VerticalProfileComputationParameters {
     fcuSpeed: Knots | Mach,
     fcuArmedLateralMode: ArmedLateralMode,
     fcuArmedVerticalMode: ArmedVerticalMode,
+    qnhSettingMillibar: Millibar,
 
     managedCruiseSpeed: Knots,
     managedCruiseSpeedMach: Mach,
@@ -65,6 +66,7 @@ export class VerticalProfileComputationParametersObserver {
             fcuSpeed: SimVar.GetSimVarValue('L:A32NX_AUTOPILOT_SPEED_SELECTED', 'number'),
             fcuArmedLateralMode: SimVar.GetSimVarValue('L:A32NX_FMA_LATERAL_ARMED', 'number'),
             fcuArmedVerticalMode: SimVar.GetSimVarValue('L:A32NX_FMA_VERTICAL_ARMED', 'number'),
+            qnhSettingMillibar: Simplane.getPressureValue('millibar'),
 
             managedCruiseSpeed: this.fmgc.getManagedCruiseSpeed(),
             managedCruiseSpeedMach: this.fmgc.getManagedCruiseSpeedMach(),

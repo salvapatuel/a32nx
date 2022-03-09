@@ -85,6 +85,10 @@ export class AircraftToDescentProfileRelation {
         return this.currentProfile.interpolateAltitudeAtDistance(this.inertialDistanceAlongTrack.get());
     }
 
+    currentTargetSpeed(): Feet {
+        return this.currentProfile.interpolateSpeedAtDistance(this.inertialDistanceAlongTrack.get());
+    }
+
     currentTargetPathAngle(): Degrees {
         return this.currentProfile.interpolatePathAngleAtDistance(this.inertialDistanceAlongTrack.get());
     }
